@@ -23,12 +23,10 @@ R packages needed for this assignment:"forecast","tseries", and "dplyr". Install
 ```{r}
 #Load/install required package here
 knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=60), tidy=TRUE) 
-install.packages("forecast")
-install.packages("tseries")
-install.packages("dplyr")
 library(forecast)
 library(tseries)
 library(dplyr)
+library(ggplot2)
 ```
 
 
@@ -82,8 +80,8 @@ Compute mean and standard deviation for these three series.
 data_threeseries <- energy_data_new[, 2:4]
 Mean <- colMeans(data_threeseries, na.rm = TRUE)
 SD <- sapply(data_threeseries, sd, na.rm = TRUE)
-Mean
-SD
+Mean #Showing mean of the three series
+SD #Showing standard deviation of the three series
 ```
 
 
@@ -96,37 +94,50 @@ Mean <- colMeans(energy_data_tsa, na.rm = TRUE)
 mean_tsa <- energy_data_tsa
 mean_tsa[,] <- matrix(rep(Mean, each = nrow(energy_data_tsa)),
                       nrow = nrow(energy_data_tsa), byrow = FALSE)
-mean_tsa
 autoplot(energy_data_tsa) +
-  autolayer(mean_tsa, linetype = "dashed",alpha = 1, show.legend = FALSE) +
+  autolayer(mean_tsa, linetype = "dashed",alpha = 1.5, show.legend = FALSE) +
   ggtitle("Total Monthly Energy Production/Consumption") +
   xlab("Time") +
   ylab("Production/Consumption") +
   labs(color="Energy Type")
 ```
-
+The Hydroelectric Power Consumption shows a releative constant and slow growth during the decades, while the biomass production and renewable energy production have similar trends. The biomass and renewable energy production have grown fast and fluctuated through years, which may due to the change of public policies and technology of renewable energy.
 
 ## Question 5
 Compute the correlation between these three series. Are they significantly correlated? Explain your answer.
 
 ```{r}
-
+correlation <- cor(energy_data_tsa, use = "complete.obs")
+correlation
 ```
-
+Total Biomass Production and Total Renewable Energy Production have a correlation of 0.96529851, showing that they are significantly correlated.
+Total Biomass Energy Production and Hydroelectric Power Consumption have a correlation of -0.13473742, which is weak and not significant.
+Total Renewable Energy Production and Hydroelectric Power Consumption have a correlation of -0.05842436, which also shows a weak and insignificant correlation.
 
 ## Question 6
 Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?
 
 ```{r}
-
+Biomass_acf = Acf(energy_data_tsa[,1], lag.max = 40, plot = TRUE)
+Biomass_acf
+Renewable_acf = Acf(energy_data_tsa[,2], lag.max = 40, plot = TRUE)
+Renewable_acf
+Hydro_acf = Acf(energy_data_tsa[,3], lag.max = 40, plot = TRUE)
+Hydro_acf
 ```
+The total biomass production and renewable energy production trends have the similar behavior. Both total biomass production and renewable energy production show positive and significant autocorrelation from lag 1 up to lag 40, indicating that they have strong  high persistence and are correlated with their past values over time. 
 
+The hydroelectric power consumption has a fluctuating trend: the autocorrelation moves up and down between positive and negative values, indicating a seasonal trend instead of a persistent trend.
 
 ## Question 7
 Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?
 
 ```{r}
-
+Biomass_pacf = Pacf(energy_data_tsa[,1], lag.max = 40, plot = TRUE)
+Biomass_pacf
+Renewable_pacf = Pacf(energy_data_tsa[,2], lag.max = 40, plot = TRUE)
+Renewable_pacf
+Hydro_pacf = Pacf(energy_data_tsa[,3], lag.max = 40, plot = TRUE)
+Hydro_pacf
 ```
-
-
+All of the three variables show fluctuating trends between positive and negative values, and most of the lines show weak correlations. After removing the influence of all these intermediate variables, the trends of biomass production and renewable production have changed from what we saw in Q6. The biomass production and renewable energy production trends are very similar, indicating that they have similar seasonality. The hydroelectric consumption trend also show seasonality, while it has a more complex and fluctuating change through 12 months. 
