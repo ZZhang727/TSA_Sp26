@@ -71,6 +71,7 @@ R packages needed for this assignment:"forecast","tseries", and "Kendall". Insta
 library(forecast)
 library(tseries)
 library(Kendall)
+library(ggplot2)
 ```
 
 ##Trend Component
@@ -147,11 +148,70 @@ Interpret the regression output, i.e., slope and intercept.
 ### Q4
 
 Use the regression coefficients to detrend each series (subtract fitted linear trend). Plot detrended series and compare with the original time series from Q1. Describe what changed.
+```{r}
+#remove the trend from series for renewable energy production
+detrend_renewable <- energy_data_tsa[,1] - (beta0_renewable + beta1_renewable*t)
+class(detrend_renewable) #test if it is a time series format
+
+#Plot detrended series for renewable energy production
+autoplot(energy_data_tsa[, 1], series = "Renewable Energy Original") +
+  autolayer(detrend_renewable, series = "Renewable Energy Detrended") +
+  labs(
+    title = "Renewable Energy Production",
+    x = "Time",
+    y = "Value",
+    colour = "series" )
+
+#remove the trend from series for hydroelectric energy consumption
+detrend_hydro <- energy_data_tsa[,2] - (beta0_hydro + beta1_hydro*t)
+class(detrend_hydro) #test if it is a time series format
+
+#Plot detrended series for renewable energy production
+autoplot(energy_data_tsa[, 2], series = "Hydroelectric Energy Original") +
+  autolayer(detrend_hydro, series = "Hydroelectric Energy Detrended") +
+  labs(
+    title = "Hydroelectric Energy Consumption",
+    x = "Time",
+    y = "Value",
+    colour = "series" )
+```
+
 
 
 ### Q5
 
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. You may use plot_grid() again to get them side by side to make it easier to compare. Did the plots change? How?
+```{r}
+#Plot original and detrended Renewable ACF 
+Renewable_acf_detrend  <- ggAcf(detrend_renewable,lag.max = 40) + ggtitle("ACF Detrend")
+Renewable_acf_detrend
+
+Renewable_Original_Detrend_combined_ACF <- cowplot::plot_grid(Renewable_acf, Renewable_acf_detrend, nrow = 1)
+Renewable_Original_Detrend_combined_ACF
+
+#Plot original and detrended Hydroelectric ACF 
+Hydro_acf_detrend  <- ggAcf(detrend_hydro,lag.max = 40) + ggtitle("ACF Detrend")
+Hydro_acf_detrend
+
+Hydro_Original_Detrend_combined_ACF <- cowplot::plot_grid(Hydro_acf, Hydro_acf_detrend, nrow = 1)
+Hydro_Original_Detrend_combined_ACF
+```
+
+```{r}
+#Plot original and detrended Renewable PACF 
+Renewable_Pacf_detrend  <- ggPacf(detrend_renewable,lag.max = 40) + ggtitle("PACF Detrend")
+Renewable_Pacf_detrend
+
+Renewable_Original_Detrend_combined_PACF <- cowplot::plot_grid(Renewable_Pacf, Renewable_Pacf_detrend, nrow = 1)
+Renewable_Original_Detrend_combined_PACF
+
+#Plot original and detrended Hydroelectric ACF 
+Hydro_Pacf_detrend  <- ggPacf(detrend_hydro,lag.max = 40) + ggtitle("PACF Detrend")
+Hydro_Pacf_detrend
+
+Hydro_Original_Detrend_combined_PACF <- cowplot::plot_grid(Hydro_Pacf, Hydro_Pacf_detrend, nrow = 1)
+Hydro_Original_Detrend_combined_PACF
+```
 
 ## Seasonal Component
 
@@ -166,6 +226,29 @@ Just by looking at the time series and the acf plots, do the series seem to have
 ### Q7
 
 Use function *lm()* to fit a seasonal means model (i.e. using the seasonal dummies) to the two time series. Ask R to print the summary of the regression. Interpret the regression output. From the results, which series have a seasonal trend? Do the results match you answer to Q6?
+
+```{r}
+#Use seasonal means model
+#dummies (renewable energy)
+dummies_renewable <- seasonaldummy(detrend_renewable)
+
+seas_means_model_renewable <- lm(detrend_renewable~dummies)
+summary(seas_means_model_renewable)
+
+#store coeff
+beta_int_renewable <- seas_means_model_renewable$coefficients[1]
+beta_coeff_renewable <- seas_means_model_renewable$coefficients[2:12]
+
+#dummies (hydroelectric)
+dummies_hydro <- seasonaldummy(detrend_hydro)
+seas_means_model_hydro <- lm(detrend_hydro~dummies)
+summary(seas_means_model_hydro)
+
+#store coeff
+beta_int_hydro <- seas_means_model_hydro$coefficients[1]
+beta_coeff_hydro <- seas_means_model_hydro$coefficients[2:12]
+```
+
 
 ### Q8
 
