@@ -159,7 +159,7 @@ autoplot(energy_data_tsa[, 1], series = "Renewable Energy Original") +
   labs(
     title = "Renewable Energy Production",
     x = "Time",
-    y = "Value",
+    y = "Production",
     colour = "series" )
 
 #remove the trend from series for hydroelectric energy consumption
@@ -172,7 +172,7 @@ autoplot(energy_data_tsa[, 2], series = "Hydroelectric Energy Original") +
   labs(
     title = "Hydroelectric Energy Consumption",
     x = "Time",
-    y = "Value",
+    y = "Consumption",
     colour = "series" )
 ```
 
@@ -230,9 +230,9 @@ Use function *lm()* to fit a seasonal means model (i.e. using the seasonal dummi
 ```{r}
 #Use seasonal means model
 #dummies (renewable energy)
-dummies_renewable <- seasonaldummy(detrend_renewable)
+dummies_renewable <- seasonaldummy(energy_data_tsa[,1])
 
-seas_means_model_renewable <- lm(detrend_renewable~dummies)
+seas_means_model_renewable <- lm(energy_data_tsa[,1]~dummies)
 summary(seas_means_model_renewable)
 
 #store coeff
@@ -240,8 +240,8 @@ beta_int_renewable <- seas_means_model_renewable$coefficients[1]
 beta_coeff_renewable <- seas_means_model_renewable$coefficients[2:12]
 
 #dummies (hydroelectric)
-dummies_hydro <- seasonaldummy(detrend_hydro)
-seas_means_model_hydro <- lm(detrend_hydro~dummies)
+dummies_hydro <- seasonaldummy(energy_data_tsa[,2])
+seas_means_model_hydro <- lm(energy_data_tsa[,2]~dummies)
 summary(seas_means_model_hydro)
 
 #store coeff
@@ -254,6 +254,90 @@ beta_coeff_hydro <- seas_means_model_hydro$coefficients[2:12]
 
 Use the regression coefficients from Q7 to deseason the series. Plot the deseason series and compare with the plots from part Q1. Did anything change?
 
+Renewable:
+```{r}
+#compute seas component
+season_renewable_data <- array(0,nobs)
+for(i in 1:nobs) {
+  season_renewable_data[i] <- beta_int_renewable+beta_coeff_renewable%*%dummies_renewable[i,]
+}
+
+#removing seas compoment from series
+deseason_renewable_data <- energy_data_tsa[,1] - season_renewable_data
+
+#convert to ts obj
+ts_deseason_renewable_data <- ts(deseason_renewable_data,
+                              start=c(1973,1),
+                              frequency=12)
+
+#plots
+autoplot(energy_data_tsa[,1])+
+  autolayer(ts_deseason_renewable_data, series= "Deseasoned Renewable") +
+  labs(
+    title = "Renwable Energy Production",
+    x = "Time",
+    y = "Production",
+    colour = "series" )
+```
+
+Hydroelectric:
+```{r}
+#compute seas component
+season_hydro_data <- array(0,nobs)
+for(i in 1:nobs) {
+  season_hydro_data[i] <- beta_int_hydro+beta_coeff_hydro%*%dummies_hydro[i,]
+}
+
+#removing seas compoment from series
+deseason_hydro_data <- energy_data_tsa[,2] - season_hydro_data
+
+#convert to ts obj
+ts_deseason_hydro_data <- ts(deseason_hydro_data,
+                              start=c(1973,1),
+                              frequency=12)
+
+#plots
+autoplot(energy_data_tsa[,1])+
+  autolayer(ts_deseason_hydro_data, series="Deseasoned Renewable") +
+  labs(
+    title = "Hydroelectric Consumption",
+    x = "Time",
+    y = "Consumption",
+    colour = "series" )
+```
+
 ### Q9
 
 Plot ACF and PACF for the deseason series and compare with the plots from Q1. You may use plot_grid() again to get them side by side. Did the plots change? How?
+```{r}
+#Plot original and deseasoned Renewable ACF 
+Renewable_acf_deseason  <- ggAcf(ts_deseason_renewable_data,lag.max = 40) + ggtitle("ACF Deseason")
+Renewable_acf_deseason
+
+Renewable_Original_Deseason_combined_ACF <- cowplot::plot_grid(Renewable_acf, Renewable_acf_deseason, nrow = 1)
+Renewable_Original_Deseason_combined_ACF
+
+#Plot original and detrended Hydroelectric ACF 
+Hydro_acf_deseason  <- ggAcf(ts_deseason_hydro_data,lag.max = 40) + ggtitle("ACF Deseason")
+Hydro_acf_deseason
+
+Hydro_Original_Deseason_combined_ACF <- cowplot::plot_grid(Hydro_acf, Hydro_acf_deseason, nrow = 1)
+Hydro_Original_Deseason_combined_ACF
+```
+
+```{r}
+#Plot original and deseasoned Renewable ACF 
+Renewable_Pacf_deseason  <- ggPacf(ts_deseason_renewable_data,lag.max = 40) + ggtitle("PACF Deseason")
+Renewable_Pacf_deseason
+
+Renewable_Original_Deseason_combined_PACF <- cowplot::plot_grid(Renewable_Pacf, Renewable_Pacf_deseason, nrow = 1)
+Renewable_Original_Deseason_combined_PACF
+
+#Plot original and detrended Hydroelectric ACF 
+Hydro_Pacf_deseason  <- ggPacf(ts_deseason_hydro_data,lag.max = 40) + ggtitle("PACF Deseason")
+Hydro_Pacf_deseason
+
+Hydro_Original_Deseason_combined_PACF <- cowplot::plot_grid(Hydro_Pacf, Hydro_Pacf_deseason, nrow = 1)
+Hydro_Original_Deseason_combined_PACF
+```
+
