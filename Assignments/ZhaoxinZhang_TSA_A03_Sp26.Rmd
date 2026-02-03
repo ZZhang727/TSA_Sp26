@@ -297,7 +297,7 @@ ts_deseason_hydro_data <- ts(deseason_hydro_data,
                               frequency=12)
 
 #plots
-autoplot(energy_data_tsa[,1])+
+autoplot(energy_data_tsa[,2])+
   autolayer(ts_deseason_hydro_data, series="Deseasoned Renewable") +
   labs(
     title = "Hydroelectric Consumption",
