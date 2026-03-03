@@ -24,9 +24,9 @@ library(Kendall)
 library(tseries)
 
 #New packages for M4
-#install.packages("outliers")
+install.packages("outliers")
 library(outliers)
-#install.packages("tidyverse")
+install.packages("tidyverse")
 library(tidyverse)
 
 ```
@@ -48,6 +48,7 @@ nhydro <- ncol(raw_inflow_data)-2
 nobs <- nrow(raw_inflow_data) 
 
 #using package lubridate
+library(lubridate)
 my_date <- paste(raw_inflow_data[,1],raw_inflow_data[,2],sep="-")
 my_date <- my(my_date)  #function my from package lubridate
 
@@ -73,6 +74,7 @@ Scatter plots, box plots and histograms are the most preferred visualization too
 
 ```{r}
 #using package ggplot2 to make histograms
+library(ggplot2)
 for(i in 1:nhydro){
   print(ggplot(inflow_data, aes(inflow_data[,(1+i)])) +
             geom_histogram() +
@@ -118,6 +120,7 @@ mean_inflow <- mean(na.exclude(inflow_random))  #exclude NA or missing observati
 sd_inflow <- sd(na.exclude(inflow_random))
 
 cat(mean_inflow,sd_inflow)
+
 
 ```
 
@@ -191,6 +194,7 @@ If the test performed confirms an outlier and you want to remove use function `r
 
 ```{r}
 #Just find extreme value
+library(outliers)
 outlier(df_inflow_random$inflow) 
                   
 #hypothesis test to check if extreme value is outlier
@@ -201,7 +205,7 @@ print(grubbs_test) #look at the p-value to find the decision
 chi_test <- chisq.out.test(df_inflow_random$inflow)
 print(chi_test)
 
-#both test confirm highest observation (4020.22) is an outiliwer 
+#both test confirm highest observation (4020.22) is an outlier 
 
 #If you need to remove outlier use rm.outlier()
 df_inflow_random$inflow <- rm.outlier(df_inflow_random$inflow,fill=TRUE) #using fill equal true the value will be replaced by mean or median 

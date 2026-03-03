@@ -1,0 +1,212 @@
+---
+title: "ENV 797 - Time Series Analysis for Energy and Environment Applications | Spring 2026"
+subtitle: "Assignment 6 - Due date 02/27/26"
+author: "Zhaoxin Zhang"
+output: pdf_document
+geometry: margin=2.54cm
+---
+
+## Directions
+
+You should open the .rmd file corresponding to this assignment on RStudio. The file is available on our class repository on Github.
+
+Once you have the file open on your local machine the first thing you will do is rename the file such that it includes your first and last name (e.g., "LuanaLima_TSA_A06_Sp26.Rmd"). Then change "Student Name" on line 4 with your name.
+
+Then you will start working through the assignment by **creating code and output** that answer each question. Be sure to use this assignment document. Your report should contain the answer to each question and any plots/tables you obtained (when applicable).
+
+When you have completed the assignment, **Knit** the text and code into a single PDF file. Submit this pdf using Sakai.
+
+R packages needed for this assignment: "ggplot2", "forecast", "tseries" and "sarima". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.
+
+```{r}
+#Load/install required package here
+library(ggplot2)
+library(forecast)  
+library(tseries)
+#install.packages("sarima")
+library(sarima)
+```
+
+This assignment has general questions about ARIMA Models.
+
+## Q1
+
+Describe the important characteristics of the sample autocorrelation function (ACF) plot and the partial sample autocorrelation function (PACF) plot for the following models:
+
+* AR(2)
+
+> Answer: For auto regressive (2), the ACF tails off gradually, and the PACF cuts off after lag 2.
+
+* MA(1)
+
+> Answer: For moving average (1), the ACF cuts off after lag 1, and the PACF tails off gradualy. 
+
+## Q2
+
+Recall that the non-seasonal ARIMA is described by three parameters ARIMA$(p,d,q)$ where $p$ is the order of the autoregressive component, $d$ is the number of times the series need to be differenced to obtain stationarity and $q$ is the order of the moving average component. If we don't need to difference the series, we don't need to specify the "I" part and we can use the short version, i.e., the ARMA$(p,q)$.
+
+(a) Consider three models: ARMA(1,0), ARMA(0,1) and ARMA(1,1) with parameters $\phi=0.6$ and $\theta= 0.9$. The $\phi$ refers to the AR coefficient and the $\theta$ refers to the MA coefficient. Use the `arima.sim()` function in R to generate $n=100$ observations from each of these three models. Then, using `autoplot()` plot the generated series in three separate graphs.
+
+```{r}
+phi <- 0.6
+theta <- 0.9
+n <- 100
+
+#ARMA(1,0)
+Model10 <- arima.sim(model=list(ar = phi), n =n)
+autoplot(Model10) +
+  ggtitle("Model ARMA(1,0)")
+```
+```{r}
+#ARMA(0,1)
+Model01 <- arima.sim(n = n, model = list(ma = theta))
+autoplot(Model01) +
+  ggtitle("Model ARMA(0,1)")
+```
+
+```{r}
+#ARMA(1,1)
+Model11 <- arima.sim(n = n, model = list(ar = phi, ma = theta))
+autoplot(Model11) +
+ggtitle("Model ARMA(1,1)")
+```
+
+(b) Plot the sample ACF for each of these models in one window to facilitate comparison (Hint: use `cowplot::plot_grid()`).
+
+
+```{r}
+library(cowplot)
+#ACF plots
+Acf10 <- autoplot(Acf(Model10, lag.max = 40, plot = FALSE)) + 
+  ggtitle("ACF - ARMA(1,0)")
+
+Acf01 <- autoplot(Acf(Model01, lag.max = 40, plot = FALSE)) + 
+  ggtitle("ACF - ARMA(0,1)")
+
+Acf11 <- autoplot(Acf(Model11, lag.max = 40, plot = FALSE)) + 
+  ggtitle("ACF - ARMA(1,1)")
+
+# Combine
+plot_grid(Acf10, Acf01, Acf11, ncol = 3)
+```
+
+(c) Plot the sample PACF for each of these models in one window to facilitate comparison.
+
+```{r}
+#ACF plots
+Pacf10 <- autoplot(Pacf(Model10, lag.max = 40, plot = FALSE)) + 
+  ggtitle("PACF - ARMA(1,0)")
+
+Pacf01 <- autoplot(Pacf(Model01, lag.max = 40, plot = FALSE)) + 
+  ggtitle("PACF - ARMA(0,1)")
+
+Pacf11 <- autoplot(Pacf(Model11, lag.max = 40, plot = FALSE)) + 
+  ggtitle("PACF - ARMA(1,1)")
+
+# Combine
+plot_grid(Pacf10, Pacf01, Pacf11, ncol = 3)
+```
+
+(d) Look at the ACFs and PACFs. Imagine you had these plots for a data set and you were asked to identify the model, i.e., is it AR, MA or ARMA and the order of each component. Would you be able identify them correctly? Explain your answer.
+
+> Answer:For the ARMA(1,0) model, the ACF tails off, and the PACF spikes at lag 1, clearly showing that it is auto regressive. For the ARMA (0,1) model, the ACF spikes at lag 1, while the PACF tails off, indicating that this is a moving average model. For the ARMA (1,1) model, both the ACF and PACF show spikes at the early stage followed by a gradual decay, which can be either AR or MA, making it a typical ARMA model.  
+
+(e) Compare the PACF values R computed with the values you provided for the lag 1 correlation coefficient, i.e., does $\phi=0.6$ match what you see on PACF for ARMA(1,0), and ARMA(1,1)? Should they match?
+
+> Answer: The ARMA (1,0) model's PACF at lag 1 is approximately 0.6, which almost equals to the AR coefficient phi. The ARAM (1,1) model's PACF is not that approximate to 0.6, which makes sense because the MA conponent theta (which is 0.9) is also included in the model.
+
+(f) Increase number of observations to $n=1000$ and repeat parts (b)-(e).
+
+```{r}
+phi <- 0.6
+theta <- 0.9
+nnew <- 1000
+
+NewModel10 <- arima.sim(model=list(ar = phi), n =nnew)
+autoplot(NewModel10) +
+  ggtitle("New Model ARMA(1,0)")
+
+NewModel01 <- arima.sim(model=list(ma = theta), n =nnew)
+autoplot(NewModel01) +
+  ggtitle("New Model ARMA(0,1)")
+
+NewModel11 <- arima.sim(n = nnew, model = list(ar = phi, ma = theta))
+autoplot(NewModel11) +
+  ggtitle(" New Model ARMA(1,1)")
+
+# New ACF plots
+NewAcf10 <- autoplot(Acf(NewModel10, lag.max = 40, plot = FALSE)) + 
+  ggtitle("New ACF - ARMA(1,0)")
+
+NewAcf01 <- autoplot(Acf(NewModel01, lag.max = 40, plot = FALSE)) + 
+  ggtitle("New ACF - ARMA(0,1)")
+
+NewAcf11 <- autoplot(Acf(NewModel11, lag.max = 40, plot = FALSE)) + 
+  ggtitle("New ACF - ARMA(1,1)")
+
+# Combine
+plot_grid(NewAcf10, NewAcf01, NewAcf11, ncol = 3)
+```
+```{r}
+# New PACF plots
+NewPacf10 <- autoplot(Pacf(NewModel10, lag.max = 40, plot = FALSE)) + 
+  ggtitle("New PACF - ARMA(1,0)")
+
+NewPacf01 <- autoplot(Pacf(NewModel01, lag.max = 40, plot = FALSE)) + 
+  ggtitle("New PACF - ARMA(0,1)")
+
+NewPacf11 <- autoplot(Pacf(NewModel11, lag.max = 40, plot = FALSE)) + 
+  ggtitle("New PACF - ARMA(1,1)")
+
+# Combine
+plot_grid(NewPacf10, NewPacf01, NewPacf11, ncol = 3)
+```
+
+>Answer: When the sample size is larger, the characteristic of auto regressive and moving average models become more clear.  For ARMA (1,0), ACF tails off gradually and the PACF cuts off sharply after lag 1, showing that it is AR(1). For ARMA(0,1), the ACF cuts off after lag 1 and the PACF tails off, clearly showing that it is an MA(1). For ARMA(1,1), both the ACF and PACF show significant spikes at the early stage with rapid decay after that, with no clean cutoff in either plot, which doesn't fit a pure AR or pure MA, pointing to an ARMA model. For ARMA(1,0), the PACF at lag 1 is approximately to 0.6, which closely matches phi=0.6, indicating that it is a pure AR model. For ARMA(1,1), the PACF at lag 1 is much higher than 0.6, which does not match phi=0.6. This is expected because the PACF reflects the combined influence of both the AR and MA components, not just phi alone.
+
+## Q3
+
+Consider the ARIMA model $y_t=0.7*y_{t-1}-0.25*y_{t-12}+a_t-0.1*a_{t-1}$
+
+(a) Identify the model using the notation ARIMA$(p,d,q)(P,D,Q)_ s$, i.e., identify the integers $p,d,q,P,D,Q,s$ (if possible) from the equation.
+>Answer: the 0.7*y_{t-1} shows that y_t depends on the its own value from one time step ago, which is not seasonal and is AR. The p is 1.  
+The 0.25*y_{t-12} means that the current value depends on the value from 12 time steps, which is seasonal and is AR. The P is 1. 
+The  -0.1*a_{t-1} is not seasonal, and it is a MA. The q is 1. 
+So the ARIMA(p,d,q)(P,D,Q) should be ARIMA (1,0,1)(1,0,0)
+
+(b) Also from the equation what are the values of the parameters, i.e., model coefficients.
+> Answer: phi = 0.7, Phi = -0.25, theta = -0.1
+
+
+## Q4
+
+Simulate a seasonal ARIMA$(0, 1)\times(1, 0)_{12}$ model with $\phi =0 .8$ and $\theta = 0.5$ using the `sim_sarima()` function from package `sarima`. The $12$ after the bracket tells you that $s=12$, i.e., the seasonal lag is 12, suggesting monthly data whose behavior is repeated every 12 months. You can generate as many observations as you like. Note the Integrated part was omitted. It means the series do not need differencing, therefore $d=D=0$. Plot the generated
+series using `autoplot()`. Does it look seasonal?
+
+```{r}
+SeasonARIMA <- sim_sarima(model = list(ma = 0.5,sar = 0.8, nseasons = 12),n = 240)
+
+#Convert to time series
+SeasonARIMA_ts <- ts(SeasonARIMA, frequency = 12)
+
+autoplot(SeasonARIMA_ts) + 
+  ggtitle("Seasonal ARIMA(0,0,1)(1,0,0) lag =12") + 
+  ylab("Value")+
+  xlab("Year")
+```
+> Yes, it looks seasonal. The plot shows a pattern of ups and downs that cycles every year, which is a seasonal behavior. 
+## Q5
+
+Plot ACF and PACF of the simulated series in Q4. Comment if the plots are well representing the model you simulated, i.e., would you be able to identify the order of both non-seasonal and seasonal components from the plots? Explain.
+
+```{r}
+Acf_SeasonARIMA <- autoplot(Acf(SeasonARIMA_ts, lag.max = 40, plot = FALSE)) + 
+  ggtitle("ACF Seasonal ARIMA(0,0,1)(1,0,0) lag =12 ") 
+
+Pacf_SeasonARIMA <- autoplot(Pacf(SeasonARIMA_ts, lag.max = 40, plot = FALSE)) + 
+  ggtitle("PACF - Seasonal ARIMA(0,0,1)(1,0,0) lag =12")
+
+# Combine
+plot_grid(Acf_SeasonARIMA, Pacf_SeasonARIMA, nrow = 2)
+```
+> Answer: The ACF decays gradually and spikes at every 12 lags, showing a clear seasonality. The PACF has a spike at lag 12 and then cuts off. Together the ACF and PACF show a characterstic of AR(1), and we can identify a seasonal component. However, we are not able to clearly identify the non-seasonal component because neither the ACF nor the PACF show a clean cutoff at the early stage, making it difficult to determine the non-seasonal MA (1).

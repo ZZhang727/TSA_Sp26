@@ -367,7 +367,7 @@ autoplot(deseasonal_residential_price,series="Observed")+
 
 Plot3 <-
 autoplot(deseasonal_residential_price,series="Observed")+
-  autolayer(Model_212$fitted,series="ARIMA(2,1,2)") 
+  autolayer(Model_212$fitted,series="ARIMA(2,1,2)")
 
 Plot4 <-
 autoplot(deseasonal_residential_price,series="Observed")+

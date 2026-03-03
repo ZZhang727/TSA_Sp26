@@ -127,6 +127,7 @@ for(i in 1:nhydro){
   par(mfrow=c(1,2))  #place plot side by side
   Acf(ts_inflow_data[,i],lag.max=40,main=paste("Inflows HP",i,sep="")) 
   # because I am not storing Acf() into any object, I don't need to specify plot=TRUE 
+  Pacf(ts_inflow_data[,i],lag.max=40,main=paste("Inflows HP",i,sep=""))
 }
 
 ```
@@ -137,12 +138,11 @@ for(i in 1:nhydro){
 Let's identify and remove trend component. You start by fitting a linear model to $Y_t=\beta_0+\beta_1*t+\epsilon_t$. 
 
 ```{r}
-
 #Create vector t
 t <- c(1:nobs)
 
 #Choose one HP 
-iHP <- 15
+iHP <- 8
 
 #Fit a linear trend to TS of iHP
 linear_trend_model <- lm(inflow_data[,iHP+1]~t)
@@ -195,30 +195,40 @@ Now let's shift attention to the seasonal component.
 #dummies
 dummies <- seasonaldummy(ts_detrend_inflow)
 
-seas_means_model <- lm(detrend_inflow_data~dummies)
+seas_means_model <- lm(detrend_inflow_data ~ dummies)
 summary(seas_means_model)
 
-#store coeff
+#store coefficient
 beta_int <- seas_means_model$coefficients[1]
 beta_coeff <- seas_means_model$coefficients[2:12]
-
+beta_coeff
 #compute seas component
-season_inflow_data <- array(0,nobs)
-for(i in 1:nobs){
-  season_inflow_data[i] <- beta_int+beta_coeff%*%dummies[i,]
-}
+season_inflow_data <-array(0,nobs)
+for(i in 1:nobs) {
+  season_inflow_data [i] <- beta_int+beta_coeff%*%dummies[i,]}
 
-#removing seas compoment from series
+#removing seas component from series
 deseason_inflow_data <- detrend_inflow_data - season_inflow_data
 
 #convert to ts obj
 ts_deseason_inflow_data <- ts(deseason_inflow_data,
                               start=c(1931,1),
-                              frequency=12)
+                              frequency = 12)
+ts_season <- ts(season_inflow_data, start = c(1931,1), frequency = 12)
 
-#plots
+#plot
 autoplot(ts_inflow_data[,iHP])+
-  autolayer(ts_deseason_inflow_data, series="Detrend and Deseasoned Inflow")
+  #autolayer(ts_deseason_inflow_data,series="Detrend and Deseasoned Inflow")
+  autolayer(ts_season,series="Seasonal Component")
+
+#Now let's extract the column names from row 11
+read_col_names <- read_excel(path="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",skip = 10,n_max = 1, sheet="Monthly Data",col_names=FALSE) 
+
+#Assign the column names to the data set
+colnames(energy_data1) <- read_col_names
+
+#Visualize the first rows of the data set
+head(energy_data1)
 ```
 
 ##Exercise

@@ -101,7 +101,7 @@ autoplot(energy_data_tsa) +
   ylab("Production/Consumption") +
   labs(color="Energy Type")
 ```
-The Hydroelectric Power Consumption shows a releative constant and slow growth during the decades, while the biomass production and renewable energy production have similar trends. The biomass and renewable energy production have grown fast and fluctuated through years, which may due to the change of public policies and technology of renewable energy.
+The hydroelectric power consumption shows a relatively persistent trend and a slow growth during the decades, while the biomass production and renewable energy production have similar trends. The biomass and renewable energy production have grown fast and fluctuated through years, which may due to the change of public policies and technology of renewable energy.
 
 ## Question 5
 Compute the correlation between these three series. Are they significantly correlated? Explain your answer.
